@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Battle</title>
+</head>
+<body>
+
+    <h2>Pokemon Battle Arena</h2>
+
+    <input id="poke1" placeholder="Enter Pokemon 1">
+    <input id="poke2" placeholder="Enter Pokemon 2">
+
+    <button onclick="battle()">Battle</button>
+
+    <br><br>
+
+    <img id="img1" width="150">
+    <img id="img2" width="150">
+
+    <br><br>
+
+    <table border="1" cellpadding="10">
+        <thead>
+            <tr>
+                <th>Stat</th>
+                <th id="name1">Pokemon 1</th>
+                <th id="name2">Pokemon 2</th>
+                <th>Winner</th>
+            </tr>
+        </thead>
+
+        <tbody id="comparisonTable">
+
+        </tbody>
+    </table>
+
+    <h2 id="winner"></h2>
+
+    <script>
+
+        async function getPokemon(name)
+        {
+            const response = await fetch(
+                `https://pokeapi.co/api/v2/pokemon/${name.toLowerCase()}`
+            );
+
+            if(!response.ok)
+            {
+                throw new Error("Pokemon not found");
+            }
+
+            return await response.json();
+        }
+
+        async function battle()
+        {
+            try
+            {
+                const pokemon1 =
+                    document.getElementById("poke1").value;
+
+                const pokemon2 =
+                    document.getElementById("poke2").value;
+
+                const p1 = await getPokemon(pokemon1);
+                const p2 = await getPokemon(pokemon2);
+
+                document.getElementById("img1").src =
+                    p1.sprites.front_default;
+
+                document.getElementById("img2").src =
+                    p2.sprites.front_default;
+
+                document.getElementById("name1").textContent =
+                    p1.name.toUpperCase();
+
+                document.getElementById("name2").textContent =
+                    p2.name.toUpperCase();
+
+                const statsToCompare = [
+                    "hp",
+                    "attack",
+                    "defense",
+                    "special-attack",
+                    "speed"
+                ];
+
+                let score1 = 0;
+                let score2 = 0;
+
+                let rows = "";
+
+                statsToCompare.forEach(stat =>
+                {
+                    const value1 =
+                        p1.stats.find(
+                            s => s.stat.name === stat
+                        ).base_stat;
+
+                    const value2 =
+                        p2.stats.find(
+                            s => s.stat.name === stat
+                        ).base_stat;
+
+                    let roundWinner = "Draw";
+
+                    if(value1 > value2)
+                    {
+                        roundWinner = p1.name;
+                        score1++;
+                    }
+                    else if(value2 > value1)
+                    {
+                        roundWinner = p2.name;
+                        score2++;
+                    }
+
+                    rows += `
+                    <tr>
+                        <td>${stat}</td>
+                        <td>${value1}</td>
+                        <td>${value2}</td>
+                        <td>${roundWinner}</td>
+                    </tr>
+                    `;
+                });
+
+                document.getElementById("comparisonTable").innerHTML =
+                    rows;
+
+                let finalWinner = "Draw";
+
+                if(score1 > score2)
+                {
+                    finalWinner = p1.name.toUpperCase();
+                }
+                else if(score2 > score1)
+                {
+                    finalWinner = p2.name.toUpperCase();
+                }
+
+                document.getElementById("winner").innerHTML =
+                    `🏆 Winner: ${finalWinner}<br>
+                     Score: ${score1} - ${score2}`;
+
+            }
+            catch(error)
+            {
+                alert(error.message);
+            }
+        }
+
+    </script>
+
+</body>
+</html>
